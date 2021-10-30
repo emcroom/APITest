@@ -33,7 +33,7 @@ namespace Jokes
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddHttpClient<JokesClient>();
+            services.AddHttpClient<IJokesRepository, JokesClient>();
             services.Configure<ConfigurationData>(Configuration.GetSection("JokesConfig"));
             services.AddControllers();
             services.AddSwaggerGen(options =>

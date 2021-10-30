@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Jokes.Data;
 using Jokes.Models;
@@ -14,8 +15,7 @@ namespace Jokes.Controllers
     public class JokesController : ControllerBase
     {
         private IJokesRepository _client;
-        private readonly ILogger<JokesController> _logger;
-        public JokesController(IJokesRepository client, ILogger<JokesController> logger)
+        public JokesController(IJokesRepository client)
         {
             _client = client;
 
@@ -38,36 +38,72 @@ namespace Jokes.Controllers
         /// Searches jokes on icanhazdadjoke.com; Limit 30
         /// </summary>
         /// <param name="searchTerm">String for a search term</param>
-        /// <returns>List of Joke</returns>
+        /// <returns>3 Lists of Jokes Grouped by size</returns>
         [HttpGet("[action]")]
         public async Task<IActionResult> Search(string searchTerm)
         {
             var searchJoke = await _client.SerachJokes(searchTerm);
-            var jokes = EmphasizeTerm(searchJoke);
+            var jokes = FormatJokes(searchJoke);
+            GroupedJokes groupedJokes = new GroupedJokes();
+            groupedJokes.SmallJokes = jokes.Where(x => x.group_type == Joke.GroupType.small).OrderBy(x=>x.joke.Length).ToList();
+            groupedJokes.MediumJokes = jokes.Where(x => x.group_type == Joke.GroupType.medium).OrderBy(x=>x.joke.Length).ToList();
+            groupedJokes.LargeJokes = jokes.Where(x => x.group_type == Joke.GroupType.large).OrderBy(x=>x.joke.Length).ToList();
+
             if (jokes != null)
             {
-                return Ok(jokes);
+                return Ok(groupedJokes);
             }
             return NotFound();
         }
 
-        /// <summary>
-        /// Upper case the search term in the result set
-        /// </summary>
-        /// <param name="searchJoke">Response from the Jokes Client</param>
-        /// <returns>Emphasized List of Joke</returns>
-        private List<Joke> EmphasizeTerm(SearchJoke searchJoke)
+        private List<Joke> FormatJokes(SearchJoke searchJoke)
         {
             var jokes = new List<Joke>();
             foreach (var joke in searchJoke.results)
             {
-                if (joke.joke.ToUpper().Contains(searchJoke.search_term.ToUpper()))
-                {
-                    joke.joke = joke.joke.Replace(searchJoke.search_term, searchJoke.search_term.ToUpper(), true, null);
-                }
+                joke.joke = EmphasizeTerm(joke.joke, searchJoke.search_term);
+                joke.group_type = SetGroup(joke.joke);
                 jokes.Add(joke);
             }
             return jokes;
+        }
+
+        private Joke.GroupType SetGroup(string joke)
+        {
+            char[] separators = new [] { ' ', '\n', '\r', 't'};
+            int wordCount = joke.Split(separators, StringSplitOptions.RemoveEmptyEntries).Length;
+            Joke.GroupType grouping = Joke.GroupType.invalid;
+            switch (wordCount)
+            {
+                case var x when x >= 20:
+                    grouping = Joke.GroupType.large;
+                    break;
+                case var x when x < 20 && x >= 10:
+                    grouping = Joke.GroupType.medium;
+                    break;
+                case var x when x < 10:
+                    grouping =Joke.GroupType.small;
+                    break;
+                default:
+                    break;
+            }
+            return grouping;
+        }
+
+       
+        private string EmphasizeTerm(string joke, string search_term)
+        {
+
+            // if (joke.ToUpper().Contains(search_term.ToUpper()))
+            // {
+            //     joke = joke.Replace(search_term, search_term.ToUpper(), true, null);
+            // }
+
+            string pattern = "\\b" + search_term + "\\b";
+            string replacement = search_term.ToUpper();
+            joke = Regex.Replace(joke, pattern, replacement, RegexOptions.IgnoreCase);
+
+            return joke;
         }
     }
 

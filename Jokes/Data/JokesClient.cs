@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Jokes.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Jokes.Data
 {
@@ -13,11 +14,13 @@ namespace Jokes.Data
     {
         private HttpClient _client;
         private readonly ConfigurationData _config;
+        private readonly ILogger<JokesClient> _logger;
 
-        public JokesClient(HttpClient client, IOptions<ConfigurationData> config)
+        public JokesClient(HttpClient client, IOptions<ConfigurationData> config, ILogger<JokesClient> logger)
         {
             _client = client;
             _config = config.Value;
+            _logger = logger;
 
             _client.BaseAddress = new Uri(_config.BaseURL);
             _client.DefaultRequestHeaders.Add("Accept", _config.Accept);
@@ -37,7 +40,7 @@ namespace Jokes.Data
             }
             catch (HttpRequestException ex)
             {
-
+                _logger.LogError($"Random Joke Exception whe connecting with API:  {ex.ToString()}");
                 return null;
             }
 
@@ -55,12 +58,12 @@ namespace Jokes.Data
             }
             catch (HttpRequestException ex)
             {
-
+                _logger.LogError($"Search Joke Exception whe connecting with API:  {ex.ToString()}");
                 return null;
             }
         }
 
-       
+
     }
 
 }
