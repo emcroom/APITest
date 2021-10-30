@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/Jokes/bin/Debug/netcoreapp3.1/Jokes.dll",
-            "args": [],
+            "args": ["--urls", "https://localhost:5003"],
             "cwd": "${workspaceFolder}/Jokes",
             "stopAtEntry": false,
             "serverReadyAction": {
