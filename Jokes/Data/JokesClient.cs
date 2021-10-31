@@ -12,27 +12,41 @@ namespace Jokes.Data
 
     public class JokesClient : IJokesRepository
     {
-        private HttpClient _client;
+        /// <summary>
+        /// set up the private variable in the class from the dependency injection
+        /// </summary>
+        private readonly HttpClient _client;
         private readonly ConfigurationData _config;
         private readonly ILogger<JokesClient> _logger;
 
+        /// <summary>
+        /// Construct the JokesClient
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="config"></param>
+        /// <param name="logger"></param>
         public JokesClient(HttpClient client, IOptions<ConfigurationData> config, ILogger<JokesClient> logger)
         {
+            //Set up the private vars
             _client = client;
             _config = config.Value;
             _logger = logger;
-
+            //define client values
             _client.BaseAddress = new Uri(_config.BaseURL);
             _client.DefaultRequestHeaders.Add("Accept", _config.Accept);
             _client.DefaultRequestHeaders.Add("User-Agent", _config.UserAgent);
 
         }
-
+        /// <summary>
+        /// Getsy a random joke from the outside api
+        /// </summary>
+        /// <returns>joke</returns>
         public async Task<Joke> GetRandomJoke()
         {
 
             try
             {
+                //base url provides random response
                 var response = await _client.GetAsync("");
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsAsync<Joke>();
@@ -45,13 +59,17 @@ namespace Jokes.Data
             }
 
         }
-
+        /// <summary>
+        /// Search the outside api for data
+        /// </summary>
+        /// <param name="searchTerm">String to be searched</param>
+        /// <returns>Jokes with meta data</returns>
         public async Task<SearchJoke> SerachJokes(string searchTerm)
         {
 
             try
             {
-                var url = new Uri($"search?limit=30&term=" + searchTerm, UriKind.Relative);
+                var url = new Uri($"search?limit=30&term={searchTerm}", UriKind.Relative);
                 var response = await _client.GetAsync(url);
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsAsync<SearchJoke>();

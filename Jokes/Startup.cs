@@ -22,6 +22,7 @@ namespace Jokes
     {
         public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
+            //Build config based on appsetting.josn file
             Configuration = configuration;
             var builder = new ConfigurationBuilder().SetBasePath(env.ContentRootPath)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
@@ -33,9 +34,11 @@ namespace Jokes
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //set up client and configuration
             services.AddHttpClient<IJokesRepository, JokesClient>();
             services.Configure<ConfigurationData>(Configuration.GetSection("JokesConfig"));
             services.AddControllers();
+            //add swagger for testing and external documentation
             services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1",
@@ -68,12 +71,11 @@ namespace Jokes
             {
                 endpoints.MapControllers();
             });
-
+            //define swagger endpoints
             app.UseSwagger();
             app.UseSwaggerUI(options =>
             {
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "Eric Croom - Degreed Test");
-                //options.SupportedSubmitMethods();
             });
         }
     }
