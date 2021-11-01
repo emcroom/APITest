@@ -38,6 +38,20 @@ namespace Jokes.Data
 
         }
         /// <summary>
+        /// Parameterless constructor for xunit.  Look into xunit DI
+        /// </summary>
+        public JokesClient()
+        {
+            //Set up the private vars
+            _client = new HttpClient();
+            // _logger = logger;
+            //define client values
+            _client.BaseAddress = new Uri("https://icanhazdadjoke.com/");
+            _client.DefaultRequestHeaders.Add("Accept", "application/json");
+            _client.DefaultRequestHeaders.Add("User-Agent", "Croom Take Home Test");
+
+        }
+        /// <summary>
         /// Getsy a random joke from the outside api
         /// </summary>
         /// <returns>joke</returns>
